@@ -1,0 +1,11 @@
+com\crm\ai\client\LlmRuntimeClient.class
+com\crm\ai\dto\LlmRequestDto.class
+com\crm\ai\config\RestClientConfig$1.class
+com\crm\ai\dto\AiResponseDto.class
+com\crm\ai\dto\LlmRequestDto$LlmRequestDtoBuilder.class
+com\crm\ai\controller\AiAssistController.class
+com\crm\ai\service\AiAssistService.class
+com\crm\ai\dto\LlmResponseDto.class
+com\crm\ai\Application.class
+com\crm\ai\config\RestClientConfig.class
+com\crm\ai\dto\AiRequestDto.class

@@ -1,0 +1,9 @@
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\Application.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\client\LlmRuntimeClient.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\dto\AiRequestDto.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\config\RestClientConfig.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\dto\LlmRequestDto.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\service\AiAssistService.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\controller\AiAssistController.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\dto\LlmResponseDto.java
+C:\Users\gaikw\OneDrive\Desktop\Sales-RAG model\backend\src\main\java\com\crm\ai\dto\AiResponseDto.java
