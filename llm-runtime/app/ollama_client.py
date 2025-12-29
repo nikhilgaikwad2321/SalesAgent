@@ -12,7 +12,7 @@ async def generate_response(prompt: str) -> str:
                 "prompt": prompt,
                 "stream": False
             }
-            response = await client.post(OLLAMA_URL, json=payload, timeout=60.0)
+            response = await client.post(OLLAMA_URL, json=payload, timeout=300.0)
             response.raise_for_status()
             result = response.json()
             return result.get("response", "")
