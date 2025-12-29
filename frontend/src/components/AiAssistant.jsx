@@ -107,11 +107,6 @@ const AiAssistant = () => {
                     </div>
 
                     <div className="header-right">
-                        <button className="icon-btn" title="Notifications">
-                            <BellIcon />
-                            <span className="badge-dot"></span>
-                        </button>
-                        <div className="header-divider"></div>
                         <div className="user-profile-header">
                             <div className="user-details">
                                 <span className="name">Nikhil Gaikwad</span>

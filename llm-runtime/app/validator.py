@@ -1,7 +1,5 @@
 BANNED_PHRASES = [
-    "guaranteed returns",
-    "risk-free",
-    "100% safe"
+    
 ]
 
 class ComplianceError(Exception):
