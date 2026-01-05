@@ -30,11 +30,12 @@ const AiAssistant = () => {
         {
             id: 1,
             type: 'bot',
-            text: "Hello! I am your Bajaj Allianz Sales Assistant. How can I help you with policy details, product pitches, or objection handling today?"
+            text: "Hello! I am your Bajaj Allianz Sales Assistant. How can I help you with policy details, product pitches, or presentation generation today?"
         }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [selectedIntent, setSelectedIntent] = useState('general_query');
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -65,20 +66,33 @@ const AiAssistant = () => {
         setLoading(true);
 
         try {
-            // 2. Call API (mocking 'general_query' intent for chat flow)
-            const intent = 'general_query';
+            // 2. Call API with selected intent
             const filters = { product: 'general' };
 
-            const result = await aiService.getAssistance(intent, userMsg.text, filters);
+            const result = await aiService.getAssistance(selectedIntent, userMsg.text, filters);
 
-            // 3. Add Bot Response
-            const botMsg = {
-                id: Date.now() + 1,
-                type: 'bot',
-                text: result.answer,
-                confidence: result.confidence
-            };
-            setMessages(prev => [...prev, botMsg]);
+            // 3. Handle Response based on status
+            if (result.status === 'PPT_GENERATED') {
+                // PPT Generation Success
+                const botMsg = {
+                    id: Date.now() + 1,
+                    type: 'bot',
+                    text: result.answer,
+                    confidence: result.confidence,
+                    pptFileName: result.pptFileName,
+                    pptFilePath: result.pptFilePath
+                };
+                setMessages(prev => [...prev, botMsg]);
+            } else {
+                // Standard text response
+                const botMsg = {
+                    id: Date.now() + 1,
+                    type: 'bot',
+                    text: result.answer,
+                    confidence: result.confidence
+                };
+                setMessages(prev => [...prev, botMsg]);
+            }
 
         } catch (err) {
             const errorMsg = {
@@ -89,9 +103,13 @@ const AiAssistant = () => {
             setMessages(prev => [...prev, errorMsg]);
         } finally {
             setLoading(false);
-            // Keep focus for rapid chat
             setTimeout(() => inputRef.current?.focus(), 100);
         }
+    };
+
+    const handleDownloadPpt = (filename) => {
+        const downloadUrl = `http://localhost:8080/api/ppt/download/${filename}`;
+        window.open(downloadUrl, '_blank');
     };
 
     return (
@@ -180,6 +198,25 @@ const AiAssistant = () => {
                                             ) : (
                                                 <div className="markdown-body">
                                                     <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                    {msg.pptFileName && (
+                                                        <div style={{ marginTop: '12px' }}>
+                                                            <button
+                                                                onClick={() => handleDownloadPpt(msg.pptFileName)}
+                                                                style={{
+                                                                    backgroundColor: 'var(--primary)',
+                                                                    color: 'white',
+                                                                    padding: '8px 16px',
+                                                                    borderRadius: '6px',
+                                                                    border: 'none',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500'
+                                                                }}
+                                                            >
+                                                                📥 Download Presentation
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -216,6 +253,29 @@ const AiAssistant = () => {
                                     placeholder="Type a message..."
                                     disabled={loading}
                                 />
+                                {/* Intent Selection */}
+                                <div>
+                                    <select
+                                        value={selectedIntent}
+                                        onChange={(e) => setSelectedIntent(e.target.value)}
+                                        style={{
+                                            padding: '6px 12px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #d1d5db',
+                                            fontSize: '14px',
+                                            cursor: 'pointer',
+                                            color: 'gray',
+                                            backgroundColor: 'white'
+                                        }}
+                                    >
+                                        <option value="" disabled>
+                                            Select Intent
+                                        </option>
+                                        <option value="general_query" style={{ color: 'black' }}>General Query</option>
+                                        <option value="product_pitch" style={{ color: 'black' }}>Product Pitch</option>
+                                        <option value="PPT_GENERATION" style={{ color: 'black' }}>Generate Client Presentation (PPT)</option>
+                                    </select>
+                                </div>
                                 <button type="submit" className="send-btn" disabled={!input.trim() || loading}>
                                     <SendIcon />
                                 </button>

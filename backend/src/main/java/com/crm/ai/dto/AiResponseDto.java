@@ -10,4 +10,7 @@ import lombok.NoArgsConstructor;
 public class AiResponseDto {
     private String answer;
     private String confidence;
+    private String pptFilePath;
+    private String pptFileName;
+    private String status;  // "TEXT_RESPONSE" or "PPT_GENERATED"
 }

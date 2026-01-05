@@ -19,7 +19,7 @@ public class AiAssistService {
     public AiResponseDto getAssistance(AiRequestDto request) {
         log.info("Received AI assistance request: {}", request);
 
-        // 1. Validation (Basic example)
+        // 1. Validation
         if (request.getQuery() == null || request.getQuery().trim().isEmpty()) {
             throw new IllegalArgumentException("Query cannot be empty");
         }
@@ -35,9 +35,24 @@ public class AiAssistService {
         try {
             LlmResponseDto llmResponse = llmRuntimeClient.generateResponse(llmRequest);
             
-            // 4. Map back to Response
-            // Assuming confidence is high if successful for now, as LLM runtime doesn't return confidence score yet
-            return new AiResponseDto(llmResponse.getResponse(), "HIGH");
+            // 4. Intent-based response mapping
+            if ("PPT_GENERATION".equals(request.getIntent())) {
+                // PPT Generation Response
+                AiResponseDto response = new AiResponseDto();
+                response.setAnswer(llmResponse.getResponse());
+                response.setConfidence("HIGH");
+                response.setPptFilePath(llmResponse.getPptFilePath());
+                response.setPptFileName(llmResponse.getPptFileName());
+                response.setStatus(llmResponse.getStatus());
+                return response;
+            } else {
+                // Standard text response
+                AiResponseDto response = new AiResponseDto();
+                response.setAnswer(llmResponse.getResponse());
+                response.setConfidence("HIGH");
+                response.setStatus("TEXT_RESPONSE");
+                return response;
+            }
         } catch (Exception e) {
             log.error("Error calling LLM Runtime", e);
             throw new RuntimeException("Failed to get response from AI service");

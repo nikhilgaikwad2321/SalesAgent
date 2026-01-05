@@ -17,7 +17,7 @@ public class LlmRuntimeClient {
     private String llmRuntimeUrl;
 
     public LlmResponseDto generateResponse(LlmRequestDto request) {
-        String url = llmRuntimeUrl + "/llm/generate";
+        String url = llmRuntimeUrl + "/api/llm/generate";
         return restTemplate.postForObject(url, request, LlmResponseDto.class);
     }
 }

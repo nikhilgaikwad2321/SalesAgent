@@ -4,6 +4,7 @@ com\crm\ai\config\RestClientConfig$1.class
 com\crm\ai\dto\AiResponseDto.class
 com\crm\ai\dto\LlmRequestDto$LlmRequestDtoBuilder.class
 com\crm\ai\controller\AiAssistController.class
+com\crm\ai\controller\PptDownloadController.class
 com\crm\ai\service\AiAssistService.class
 com\crm\ai\dto\LlmResponseDto.class
 com\crm\ai\Application.class

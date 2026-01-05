@@ -16,8 +16,9 @@ def ingest_documents():
         file_path = os.path.join(DOCS_DIR, file)
         if file.endswith(".pdf"):
             print(f"Loading {file_path}...")
-            loader = PyPDFLoader(file_path)
-            documents.extend(loader.load())
+            print(f"Loading {file_path}...")
+            from app.rag.pdf_parser import load_pdf_with_tables
+            documents.extend(load_pdf_with_tables(file_path))
         elif file.endswith(".txt"):
             print(f"Loading {file_path}...")
             from langchain_community.document_loaders import TextLoader

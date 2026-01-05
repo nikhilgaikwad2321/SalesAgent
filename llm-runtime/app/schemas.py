@@ -9,3 +9,6 @@ class GenerateRequest(BaseModel):
 class GenerateResponse(BaseModel):
     response: str
     model: str
+    ppt_file_path: Optional[str] = None
+    ppt_file_name: Optional[str] = None
+    status: str = "TEXT_RESPONSE"  # "TEXT_RESPONSE" or "PPT_GENERATED"
