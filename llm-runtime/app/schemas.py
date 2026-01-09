@@ -4,6 +4,7 @@ from typing import Optional, Dict
 class GenerateRequest(BaseModel):
     intent: str
     query: str
+    response_language: str = "EN"
     filters: Optional[Dict[str, str]] = None
 
 class GenerateResponse(BaseModel):

@@ -18,20 +18,26 @@ async def generate(request: GenerateRequest):
         # 2. Intent-based routing
         if request.intent == "PPT_GENERATION":
             # PPT Generation Flow
-            ppt_result = await generate_ppt(request.query, context_docs)
+            ppt_result = await generate_ppt(request.query, context_docs, request.response_language)
             
             model_name = GEMINI_MODEL if LLM_BACKEND == "gemini" else OLLAMA_MODEL
+            
+            # Construct Download URL (Assuming API is mounted at /api)
+            # Safe filename handling
+            filename = ppt_result['ppt_file_name']
+            download_url = f"/api/llm/ppt/download/{filename}"
+            
             return GenerateResponse(
-                response=f"Presentation generated successfully: {ppt_result['ppt_file_name']}",
+                response=f"Presentation generated successfully: {filename}",
                 model=model_name,
-                ppt_file_path=ppt_result['ppt_file_path'],
-                ppt_file_name=ppt_result['ppt_file_name'],
+                ppt_file_path=download_url, # Now returning URL instead of local path for frontend
+                ppt_file_name=filename,
                 status=ppt_result['status']
             )
         else:
             # Existing flow for other intents
             # 3. Build Prompt
-            prompt = build_prompt(request.query, context_docs)
+            prompt = build_prompt(request.query, context_docs, request.response_language)
             
             # 4. Generate Response via LLM
             raw_response = await generate_response(prompt)

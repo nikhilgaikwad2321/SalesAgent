@@ -11,6 +11,11 @@ Your goal is to create slide content that is:
 - Professional and trustworthy
 - Based strictly on the provided RAG context
 
+LANGUAGE INSTRUCTION:
+- Generate ALL content in the target language specified below.
+- If Target Language is "HI" (Hindi): Use conversational Hinglish (e.g., "Aapka bhavishya secure hai").
+- If Target Language is "EN" (English): Use simple, professional English.
+
 STRICT RULES:
 - Use ONLY the provided context to generate content
 - Do NOT invent policy features, pricing, guarantees, or returns
@@ -38,12 +43,14 @@ REQUIRED SLIDES:
 2. Why Insurance Is Needed (benefits, protection)
 3. Policy Benefits (from RAG context)
 4. Coverage and Premium Overview (data for chart)
+5. Claim Process (Step-by-step guide - MANDATORY)
+6. Exclusions (What is not covered - MANDATORY)
 
 Focus on family protection, financial security, and peace of mind.
 """
 
 
-def build_ppt_prompt(query: str, context_docs: List[Document]) -> str:
+def build_ppt_prompt(query: str, context_docs: List[Document], language: str = "EN") -> str:
     """
     Build a specialized prompt for PPT slide content generation.
     Returns a prompt that instructs the LLM to generate structured JSON.
@@ -52,6 +59,8 @@ def build_ppt_prompt(query: str, context_docs: List[Document]) -> str:
     
     prompt = f"""
 {PPT_SYSTEM_INSTRUCTION}
+
+Target Language: {"HINDI (Hinglish)" if language == "HI" else "ENGLISH"}
 
 Context (Approved Policy Information):
 {context_text}

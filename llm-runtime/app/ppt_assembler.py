@@ -3,9 +3,10 @@ import io
 from datetime import datetime
 from typing import List, Dict, Optional
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches, Pt, Cm
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
@@ -67,23 +68,71 @@ def create_charts(slide_data: dict) -> List[str]:
         plt.close()
         chart_paths.append(chart_path)
     
-    # Chart 2: Benefits Breakdown (Pie Chart)
-    fig, ax = plt.subplots(figsize=(8, 6))
-    benefits = ['Death Benefit', 'Critical Illness', 'Accidental Death', 'Disability Cover']
-    sizes = [50, 25, 15, 10]
-    colors = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd']
-    explode = (0.1, 0, 0, 0)
-    
-    ax.pie(sizes, explode=explode, labels=benefits, colors=colors, autopct='%1.1f%%',
-           shadow=True, startangle=90, textprops={'fontsize': 11, 'fontweight': 'bold'})
-    ax.set_title('Policy Benefits Distribution', fontsize=14, fontweight='bold', pad=20)
-    
-    chart_path = f"temp/charts/benefits_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-    plt.tight_layout()
-    plt.savefig(chart_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    chart_paths.append(chart_path)
-    
+    # Chart 2: Benefits/Allocation Breakdown (Donut Chart)
+    if True: # Always generate for demo
+        fig, ax = plt.subplots(figsize=(8, 6))
+        benefits = ['Death Benefit', 'Critical Illness', 'Accidental Death', 'Disability']
+        sizes = [50, 25, 15, 10]
+        colors = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd']
+        
+        # Donut Chart
+        wedges, texts, autotexts = ax.pie(sizes, labels=benefits, colors=colors, autopct='%1.1f%%',
+               shadow=False, startangle=90, pctdistance=0.85, textprops={'fontsize': 11, 'fontweight': 'bold'})
+        
+        # Draw white circle in center
+        centre_circle = plt.Circle((0,0),0.70,fc='white')
+        fig.gca().add_artist(centre_circle)
+        
+        ax.axis('equal')  
+        ax.set_title('Benefit Allocation', fontsize=14, fontweight='bold', pad=20)
+        
+        chart_path = f"temp/charts/benefits_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
+        plt.tight_layout()
+        plt.savefig(chart_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        chart_paths.append(chart_path)
+
+    # Chart 3: Returns Comparison (Dual Line Graph 4% vs 8%)
+    if True:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        years = range(1, 21) # 20 year view
+        returns_4 = [100 * (1.04 ** i) for i in years] # Proxy logic
+        returns_8 = [100 * (1.08 ** i) for i in years] # Proxy logic
+        
+        ax.plot(years, returns_8, marker='', color='#16a34a', linewidth=3, label='Optimistic (8%)')
+        ax.plot(years, returns_4, marker='', color='#2563eb', linewidth=3, linestyle='--', label='Conservative (4%)')
+        
+        ax.set_xlabel('Policy Year', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Fund Value (Index)', fontsize=12, fontweight='bold')
+        ax.set_title('Projected Returns Growth (4% vs 8%)', fontsize=14, fontweight='bold', pad=20)
+        ax.legend(fontsize=11)
+        ax.grid(True, alpha=0.3)
+        
+        chart_path = f"temp/charts/returns_comparison_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
+        plt.tight_layout()
+        plt.savefig(chart_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        chart_paths.append(chart_path)
+
+    # Chart 4: Premium Payment Timeline (Horizontal Bar)
+    if True:
+        fig, ax = plt.subplots(figsize=(8, 3))
+        stages = ['Pay Premium', 'Stay Protected', 'Maturity Benefit']
+        start = [0, 0, 15]
+        duration = [10, 20, 0.5] # Pay for 10, Cover for 20 (Simulated)
+        colors = ['#f59e0b', '#2563eb', '#16a34a']
+        
+        ax.barh(stages, duration, left=start, color=colors, height=0.5)
+        ax.set_xlabel('Years', fontsize=12, fontweight='bold')
+        ax.set_title('Premium Payment & Cover Timeline', fontsize=14, fontweight='bold', pad=10)
+        ax.grid(axis='x', alpha=0.3)
+        
+        chart_path = f"temp/charts/timeline_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
+        plt.tight_layout()
+        plt.savefig(chart_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        chart_paths.append(chart_path)
+
     return chart_paths
 
 
@@ -164,11 +213,47 @@ def assemble_ppt(slide_content: dict, chart_paths: List[str]) -> str:
         title_para.font.bold = True
         title_para.font.color.rgb = PRIMARY_COLOR
         
+        title_para.font.color.rgb = PRIMARY_COLOR
+        
         # Add content based on type
         content_type = slide_data.get("content_type", "text")
         content = slide_data.get("content", "")
         
-        if content_type == "bullet_points" and isinstance(content, list):
+        if content_type == "kpi_cards":
+            # Draw KPI Cards (Rounded Rectangles)
+            # Content is expected to be a list of dicts: [{"label": "Sum Assured", "value": "₹50 Lakh"}, ...]
+            kpi_data = content if isinstance(content, list) else []
+            card_width = Inches(2.5)
+            card_height = Inches(1.5)
+            gap = Inches(0.5)
+            start_x = (prs.slide_width - ((card_width * len(kpi_data)) + (gap * (len(kpi_data) - 1)))) / 2
+            start_y = Inches(2.5)
+            
+            for i, kpi in enumerate(kpi_data):
+                left_pos = start_x + (i * (card_width + gap))
+                shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left_pos, start_y, card_width, card_height)
+                shape.fill.solid()
+                shape.fill.fore_color.rgb = RGBColor(239, 246, 255) # Light blue bg
+                shape.line.color.rgb = PRIMARY_COLOR
+                shape.line.width = Pt(1.5)
+                
+                # Value (Top/Bold)
+                text_frame = shape.text_frame
+                text_frame.text = kpi.get("value", "")
+                p = text_frame.paragraphs[0]
+                p.alignment = PP_ALIGN.CENTER
+                p.font.size = Pt(24)
+                p.font.bold = True
+                p.font.color.rgb = PRIMARY_COLOR
+                
+                # Label (Bottom)
+                p2 = text_frame.add_paragraph()
+                p2.text = kpi.get("label", "")
+                p2.alignment = PP_ALIGN.CENTER
+                p2.font.size = Pt(14)
+                p2.font.color.rgb = TEXT_COLOR
+                
+        elif content_type == "bullet_points" and isinstance(content, list):
             content_box = slide.shapes.add_textbox(Inches(0.7), Inches(1.8), Inches(8.6), Inches(4.5))
             text_frame = content_box.text_frame
             text_frame.word_wrap = True
@@ -193,7 +278,22 @@ def assemble_ppt(slide_content: dict, chart_paths: List[str]) -> str:
     
     # Add chart slides
     if chart_paths:
+        # We will add slides for charts systematically
+        # 1. Coverage vs Premium (from original code, if exists[0])
+        # 2. Donut (Allocation)
+        # 3. Dual Line (Returns)
+        # 4. Timeline
+        
+        chart_titles = [
+            "Coverage vs Premium Analysis",
+            "Your Investment Allocation",
+            "Projected Returns Simulation",
+            "Long-Term Protection Timeline"
+        ]
+        
         for i, chart_path in enumerate(chart_paths):
+            if i >= len(chart_titles): break # Safety check
+            
             slide_layout = prs.slide_layouts[5]
             slide = prs.slides.add_slide(slide_layout)
             
@@ -204,7 +304,7 @@ def assemble_ppt(slide_content: dict, chart_paths: List[str]) -> str:
                     sp.getparent().remove(sp)
             
             # Add title
-            title_text = "Coverage vs Premium" if i == 0 else "Benefits Overview"
+            title_text = chart_titles[i]
             title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(0.8))
             title_frame = title_box.text_frame
             title_frame.text = title_text
@@ -215,7 +315,25 @@ def assemble_ppt(slide_content: dict, chart_paths: List[str]) -> str:
             
             # Add chart image
             if os.path.exists(chart_path):
-                slide.shapes.add_picture(chart_path, Inches(1), Inches(1.8), width=Inches(8))
+                # Center the image
+                pic = slide.shapes.add_picture(chart_path, Inches(1), Inches(1.8), width=Inches(8))
+                
+                # Add a caption/explanation below chart
+                caption_box = slide.shapes.add_textbox(Inches(1), Inches(6.5), Inches(8), Inches(1))
+                caption_frame = caption_box.text_frame
+                
+                captions = [
+                    "Higher coverage ensures your family is safe, with affordable premiums.",
+                    "Your money is diversified to ensure both safety and growth.",
+                    "See how your fund grows significantly over 20 years with compound interest.",
+                    "You pay for a limited period, but get protection for the full term."
+                ]
+                caption_frame.text = captions[i] if i < len(captions) else ""
+                cp = caption_frame.paragraphs[0]
+                cp.font.size = Pt(16)
+                cp.font.italic = True
+                cp.alignment = PP_ALIGN.CENTER
+                cp.font.color.rgb = TEXT_COLOR
     
     # Disclaimer Slide
     slide_layout = prs.slide_layouts[5]

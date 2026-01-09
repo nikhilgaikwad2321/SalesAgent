@@ -6,7 +6,7 @@ from app.llm_factory import generate_response
 import os
 
 
-async def generate_ppt(query: str, context_docs: List[Document]) -> dict:
+async def generate_ppt(query: str, context_docs: List[Document], language: str = "EN") -> dict:
     """
     Main PPT generation orchestrator.
     
@@ -20,7 +20,7 @@ async def generate_ppt(query: str, context_docs: List[Document]) -> dict:
     """
     
     # Step 1: Generate slide content using LLM
-    prompt = build_ppt_prompt(query, context_docs)
+    prompt = build_ppt_prompt(query, context_docs, language)
     llm_response = await generate_response(prompt)
     slide_content = parse_llm_slide_content(llm_response)
     

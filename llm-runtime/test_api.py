@@ -2,7 +2,7 @@ import httpx
 import time
 import sys
 
-URL = "http://localhost:8000/llm/generate"
+URL = "http://localhost:8000/api/llm/generate"
 
 def test_generate():
     print("Waiting for server to start...")
@@ -19,26 +19,55 @@ def test_generate():
         print("\nServer failed to start in time.")
         return
 
-    payload = {
+    # TEST 1: Hindi Response
+    payload_hi = {
         "intent": "product_pitch",
         "query": "Explain the key features of the Gold Plan term insurance",
+        "response_language": "HI",
         "filters": {}
     }
     
-    print(f"\nSending request to {URL} with payload: {payload}")
-    
+    print(f"\n[TEST 1] Sending HINDI request to {URL}...")
     try:
-        response = httpx.post(URL, json=payload, timeout=120.0)
+        response = httpx.post(URL, json=payload_hi, timeout=120.0)
         print(f"Status Code: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
-            print("\n--- RESPONSE ---")
+            print("\n--- HINDI RESPONSE ---")
             print(data["response"])
-            print("----------------")
-            print(f"Model used: {data['model']}")
+            print("----------------------")
         else:
             print("Error response:", response.text)
+    except Exception as e:
+        print(f"Request failed: {e}")
+
+    # TEST 2: PPT Generation & Download URL Check
+    payload_ppt = {
+        "intent": "PPT_GENERATION",
+        "query": "Create a presentation for Mr. Sharma interested in Gold Plan",
+        "response_language": "EN",
+        "filters": {}
+    }
+
+    print(f"\n[TEST 2] Sending PPT GENERATION request to {URL}...")
+    try:
+        response = httpx.post(URL, json=payload_ppt, timeout=180.0)
+        print(f"Status Code: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            print("\n--- PPT RESPONSE ---")
+            print(f"Status: {data['status']}")
+            print(f"File Name: {data['ppt_file_name']}")
+            print(f"Download Path: {data['ppt_file_path']}")
             
+            # Verify Download URL format
+            if data['ppt_file_path'].startswith("/api/llm/ppt/download/"):
+                print("SUCCESS: Download URL format is correct.")
+            else:
+                print("FAILURE: Download URL format is incorrect.")
+                
+        else:
+            print("Error response:", response.text)
     except Exception as e:
         print(f"Request failed: {e}")
 

@@ -1,15 +1,17 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/ai';
+const API_BASE_URL = 'http://localhost:8000/api'; // Direct to Python Backend
 
 const aiService = {
-  getAssistance: async (intent, query, filters = {}) => {
+  getAssistance: async (intent, query, filters = {}, response_language = "EN") => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/assist`, {
+      // Endpoint is /llm/generate based on app/api.py router
+      const response = await axios.post(`${API_BASE_URL}/llm/generate`, {
         intent,
         query,
         filters,
+        response_language
       });
       return response.data;
     } catch (error) {

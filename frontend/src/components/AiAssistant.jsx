@@ -24,6 +24,15 @@ const BellIcon = () => (
     </svg>
 );
 
+const MicIcon = ({ listening }) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={listening ? "red" : "none"} stroke={listening ? "red" : "#6b7280"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+    </svg>
+);
+
 const AiAssistant = () => {
     // State: History of messages (Persist context)
     const [messages, setMessages] = useState([
@@ -36,6 +45,8 @@ const AiAssistant = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [selectedIntent, setSelectedIntent] = useState('general_query');
+    const [responseLanguage, setResponseLanguage] = useState('EN');
+    const [listening, setListening] = useState(false);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -55,6 +66,52 @@ const AiAssistant = () => {
         scrollToBottom();
     }, [messages]);
 
+    // Intent Change Handler (Auto-fill for PPT)
+    useEffect(() => {
+        if (selectedIntent === 'PPT_GENERATION') {
+            const sampleData = `Name: Rahul Sharma
+Date of Birth: 12-08-1990
+Pincode: 411001
+Sum Assured: 50 Lakhs
+Annual Premium: 25,000`;
+            setInput(sampleData);
+        } else {
+            // Optional: Clear input or leave it? Let's leave it to avoid data loss if accidental switch
+        }
+    }, [selectedIntent]);
+
+    const startListening = () => {
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new window.webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-IN'; // Indian English
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                setListening(true);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                setInput(prev => prev ? prev + ' ' + transcript : transcript);
+                setListening(false);
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error", event.error);
+                setListening(false);
+            };
+
+            recognition.onend = () => {
+                setListening(false);
+            };
+
+            recognition.start();
+        } else {
+            alert("Voice input is not supported in this browser. Please use Chrome.");
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
@@ -69,7 +126,7 @@ const AiAssistant = () => {
             // 2. Call API with selected intent
             const filters = { product: 'general' };
 
-            const result = await aiService.getAssistance(selectedIntent, userMsg.text, filters);
+            const result = await aiService.getAssistance(selectedIntent, userMsg.text, filters, responseLanguage);
 
             // 3. Handle Response based on status
             if (result.status === 'PPT_GENERATED') {
@@ -77,10 +134,10 @@ const AiAssistant = () => {
                 const botMsg = {
                     id: Date.now() + 1,
                     type: 'bot',
-                    text: result.answer,
-                    confidence: result.confidence,
-                    pptFileName: result.pptFileName,
-                    pptFilePath: result.pptFilePath
+                    text: result.response, // Backend returns 'response' for message
+                    confidence: result.confidence || 1.0,
+                    pptFileName: result.ppt_file_name, // Backend field name
+                    pptFilePath: result.ppt_file_path // Backend field name (now a URL path)
                 };
                 setMessages(prev => [...prev, botMsg]);
             } else {
@@ -88,8 +145,8 @@ const AiAssistant = () => {
                 const botMsg = {
                     id: Date.now() + 1,
                     type: 'bot',
-                    text: result.answer,
-                    confidence: result.confidence
+                    text: result.response, // Backend returns 'response'
+                    confidence: result.confidence || 1.0
                 };
                 setMessages(prev => [...prev, botMsg]);
             }
@@ -98,7 +155,7 @@ const AiAssistant = () => {
             const errorMsg = {
                 id: Date.now() + 1,
                 type: 'bot',
-                text: "I apologize, but I'm having trouble connecting to the server. Please try again."
+                text: "I apologize, but I'm having trouble connecting to the server. Please check your connection."
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
@@ -107,8 +164,13 @@ const AiAssistant = () => {
         }
     };
 
-    const handleDownloadPpt = (filename) => {
-        const downloadUrl = `http://localhost:8080/api/ppt/download/${filename}`;
+    const handleDownloadPpt = (filePath) => {
+        // If filePath is relative (starts with /api), prepend localhost:8000
+        // If it is absolute, use as is.
+        let downloadUrl = filePath;
+        if (filePath && filePath.startsWith('/')) {
+            downloadUrl = `http://localhost:8000${filePath}`;
+        }
         window.open(downloadUrl, '_blank');
     };
 
@@ -201,7 +263,7 @@ const AiAssistant = () => {
                                                     {msg.pptFileName && (
                                                         <div style={{ marginTop: '12px' }}>
                                                             <button
-                                                                onClick={() => handleDownloadPpt(msg.pptFileName)}
+                                                                onClick={() => handleDownloadPpt(msg.pptFilePath)}
                                                                 style={{
                                                                     backgroundColor: 'var(--primary)',
                                                                     color: 'white',
@@ -245,6 +307,15 @@ const AiAssistant = () => {
                                 <button type="button" className="attach-btn" title="Attach (Mock)">
                                     <AttachIcon />
                                 </button>
+                                <button
+                                    type="button"
+                                    className={`attach-btn ${listening ? 'listening' : ''}`}
+                                    onClick={startListening}
+                                    title="Voice Input"
+                                    style={{ marginLeft: '5px', marginRight: '5px' }}
+                                >
+                                    <MicIcon listening={listening} />
+                                </button>
                                 <input
                                     ref={inputRef}
                                     type="text"
@@ -274,6 +345,25 @@ const AiAssistant = () => {
                                         <option value="general_query" style={{ color: 'black' }}>General Query</option>
                                         <option value="product_pitch" style={{ color: 'black' }}>Product Pitch</option>
                                         <option value="PPT_GENERATION" style={{ color: 'black' }}>Generate Client Presentation (PPT)</option>
+                                    </select>
+
+                                    {/* Language Selector */}
+                                    <select
+                                        value={responseLanguage}
+                                        onChange={(e) => setResponseLanguage(e.target.value)}
+                                        style={{
+                                            padding: '6px 12px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #d1d5db',
+                                            fontSize: '14px',
+                                            cursor: 'pointer',
+                                            color: '#4b5563',
+                                            backgroundColor: 'white',
+                                            marginLeft: '8px'
+                                        }}
+                                    >
+                                        <option value="EN">English</option>
+                                        <option value="HI">Hindi (Hinglish)</option>
                                     </select>
                                 </div>
                                 <button type="submit" className="send-btn" disabled={!input.trim() || loading}>
